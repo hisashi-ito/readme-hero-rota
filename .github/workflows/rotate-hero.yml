@@ -1,0 +1,94 @@
+name: Rotate README hero
+
+on:
+  schedule:
+    # GitHub Actions の cron は UTC。22:00 UTC = 07:00 JST。
+    # 米国 EOD + 欧州 就寝 で混雑が穏やかな off-peak slot。
+    # スロット選定の根拠は docs/cron-timing.md を参照。
+    - cron: "0 22 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  # 2026-06-16 以降 Node.js 24 が JavaScript actions のデフォルトに。
+  # v20 ベースの action も Node 24 で動くよう明示的に opt-in。
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Rotate hero image
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import random
+          import re
+
+          readme = Path("README.md")
+          hero_dir = Path("assets/heroes")
+
+          if not readme.exists():
+              raise SystemExit("README.md not found")
+          if not hero_dir.exists():
+              raise SystemExit(f"Hero directory not found: {hero_dir}")
+
+          images = sorted([
+              p for p in hero_dir.iterdir()
+              if p.is_file() and p.suffix.lower() in [".png", ".jpg", ".jpeg", ".webp", ".gif"]
+          ])
+          if not images:
+              raise SystemExit("No hero images found in assets/heroes")
+
+          text = readme.read_text(encoding="utf-8")
+          block_re = re.compile(r"<!-- HERO_START -->.*?<!-- HERO_END -->", re.S)
+          m = block_re.search(text)
+          if not m:
+              raise SystemExit("HERO_START / HERO_END block not found in README.md")
+
+          sm = re.search(r'<img\s+[^>]*src="([^"]+)"', m.group(0))
+          current_src = sm.group(1) if sm else None
+
+          # 現在表示中の画像と同じものを避ける。
+          candidates = images
+          if current_src:
+              without_current = [
+                  p for p in images
+                  if f"./{p.as_posix()}" != current_src and p.as_posix() != current_src
+              ]
+              if without_current:
+                  candidates = without_current
+
+          selected = random.choice(candidates)
+          image_path = f"./{selected.as_posix()}"
+
+          # HERO ブロック内の <img src> 属性だけを差し替え(width 等は保持)。
+          new_block = re.sub(
+              r'(<img\s+[^>]*src=")([^"]+)(")',
+              lambda mm: mm.group(1) + image_path + mm.group(3),
+              m.group(0), count=1,
+          )
+          text = block_re.sub(lambda _: new_block, text, count=1)
+          readme.write_text(text, encoding="utf-8")
+          print(f"Selected hero image: {image_path}")
+          PY
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git add README.md
+          # [skip ci]: 他の workflow (tests 等) が誤って起動するのを防ぐ。
+          # 各 test workflow に paths-ignore を入れるとさらに堅い。
+          git commit -m "Rotate README hero image [skip ci]"
+          git push
