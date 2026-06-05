@@ -5,7 +5,7 @@
 
 <!-- HERO_START -->
 <p align="center">
-  <img src="./assets/heroes/hero_2.png" width="80%">
+  <img src="./assets/heroes/hero_2.png" width="100%">
 </p>
 <!-- HERO_END -->
 
@@ -59,7 +59,7 @@ Python は workflow にインライン(stdlib only)。追加 install ゼロ。
 | 何を | 場所 | やり方 |
 |---|---|---|
 | 発火時刻を変える | `.github/workflows/rotate-hero.yml` の `cron:` | UTC 限定。[docs/cron-timing.md](./docs/cron-timing.md) 参照 |
-| 画像幅を変える | README の `<img ...>` タグ | `width="80%"` を編集 |
+| 画像幅を変える | README の `<img ...>` タグ | `width="100%"` を編集 |
 | 画像ディレクトリ | workflow 内の Python | `Path("assets/heroes")` を編集 |
 | 手動キック | Actions タブ | "Run workflow" ボタン(`workflow_dispatch` 有効済) |
 | CI 二重起動を抑止 | 他 workflow の yaml | `paths-ignore` を追加(後述) |

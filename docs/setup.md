@@ -86,7 +86,7 @@ HERO マーカーは中身だけを swap するので、外側に他の要素を
 </p>
 <!-- HERO_START -->
 <p align="center">
-  <img src="./assets/heroes/hero_1.png" width="80%">
+  <img src="./assets/heroes/hero_1.png" width="100%">
 </p>
 <!-- HERO_END -->
 ```
