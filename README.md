@@ -5,7 +5,7 @@
 
 <!-- HERO_START -->
 <p align="center">
-  <img src="./assets/heroes/hero_1.png" width="100%">
+  <img src="./assets/heroes/hero_3.png" width="100%">
 </p>
 <!-- HERO_END -->
 
